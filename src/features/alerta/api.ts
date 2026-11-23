@@ -13,6 +13,8 @@ export type CrearAlerta = {
 export type DetallesAlerta = {
   cantidadAfectados?: number
   descripcion?: string
+  /** Código de un tipo de suceso del protocolo de la central. Un código que no conoce no frena nada. */
+  tipoSuceso?: string
 }
 
 /** `MotivoCancelacionAlerta` del backend. */

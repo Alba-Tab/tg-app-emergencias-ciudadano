@@ -4,6 +4,7 @@ import { olvidarSeguimiento, recordarDetallesEnviados } from '@/features/seguimi
 
 import { alertaApi, type CrearAlerta, type DetallesAlerta, type RetirarPedido } from './api'
 import { consultarEstadoGps } from './ubicacion'
+import { formularioKeys } from '@/features/formulario/queries'
 
 export const alertaKeys = {
   estadoGps: ['gps'] as const,
@@ -42,6 +43,8 @@ export const completarDetallesMutation = (queryClient: QueryClient) =>
     onSuccess: (_alerta, { alertaId }) => {
       // Sin esperar ni propagar: si el teléfono no logra guardarlo, el envío igual salió bien.
       recordarDetallesEnviados(queryClient, alertaId).catch(() => {})
+      // Con el tipo de suceso declarado aparecen sus preguntas.
+      void queryClient.invalidateQueries({ queryKey: formularioKeys.preguntas(alertaId) })
     },
   })
 

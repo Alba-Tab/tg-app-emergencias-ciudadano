@@ -5,6 +5,7 @@ import { Button, Input, Paragraph, Spinner, Text, XStack, YStack, useTheme } fro
 
 import { ciudadanoQuery } from '@/features/acceso/queries'
 import { completarDetallesMutation } from '@/features/alerta/queries'
+import { tiposDeSucesoQuery } from '@/features/formulario/queries'
 import { ErrorApi } from '@/shared/api/cliente'
 
 import {
@@ -28,6 +29,8 @@ export function PreguntasIncidente({ alertaId }: { alertaId: number }) {
   const ciudadano = useQuery(ciudadanoQuery()).data
   const enCurso = useQuery(seguimientoEnCursoQuery()).data
   const completar = useMutation(completarDetallesMutation(queryClient))
+  // Si la central publicó su protocolo, "qué pasó" se elige entre sus tipos de suceso. Si no, queda la lista de siempre.
+  const tiposDelProtocolo = useQuery(tiposDeSucesoQuery()).data ?? []
 
   const form = useForm({
     defaultValues: SIN_RESPUESTAS,
@@ -77,48 +80,70 @@ export function PreguntasIncidente({ alertaId }: { alertaId: number }) {
           )}
         </form.Field>
 
-        <form.Field name="tipo">
-          {(campo) => (
-            <YStack gap={10}>
-              <Text color="$texto" fontSize={16} lineHeight={22} fontWeight="600">
-                ¿Qué pasó?
-              </Text>
-              <XStack flexWrap="wrap" gap={8} role="radiogroup" aria-label="Qué pasó">
-                {TIPOS_DE_EMERGENCIA.map((opcion) => (
-                  <Opcion
-                    key={opcion.id}
-                    // "…" avisa que esa opción pide escribir algo más.
-                    texto={opcion.id === TIPO_OTRO ? `${opcion.texto}…` : opcion.texto}
-                    etiqueta={opcion.texto}
-                    elegida={campo.state.value === opcion.id}
-                    onPress={() => campo.handleChange(opcion.id)}
-                  />
-                ))}
-              </XStack>
-              {campo.state.value === TIPO_OTRO ? (
-                <form.Field name="otro">
-                  {(campoOtro) => (
-                    <Input
-                      value={campoOtro.state.value}
-                      onChangeText={campoOtro.handleChange}
-                      onBlur={campoOtro.handleBlur}
-                      placeholder="Cuéntalo en pocas palabras"
-                      placeholderTextColor="$textoTenue"
-                      maxLength={LARGO_MAXIMO_OTRO}
-                      height={48}
-                      rounded={12}
-                      fontSize={15}
-                      bg="$fondo"
-                      borderColor="$borde"
-                      returnKeyType="done"
-                      aria-label="Qué pasó, en pocas palabras"
+        {tiposDelProtocolo.length > 0 ? (
+          <form.Field name="tipoSuceso">
+            {(campo) => (
+              <YStack gap={10}>
+                <Text color="$texto" fontSize={16} lineHeight={22} fontWeight="600">
+                  ¿Qué pasó?
+                </Text>
+                <XStack flexWrap="wrap" gap={8} role="radiogroup" aria-label="Qué pasó">
+                  {tiposDelProtocolo.map((tipo) => (
+                    <Opcion
+                      key={tipo.codigo}
+                      texto={tipo.nombre}
+                      elegida={campo.state.value === tipo.codigo}
+                      onPress={() => campo.handleChange(tipo.codigo)}
                     />
-                  )}
-                </form.Field>
-              ) : null}
-            </YStack>
-          )}
-        </form.Field>
+                  ))}
+                </XStack>
+              </YStack>
+            )}
+          </form.Field>
+        ) : (
+          <form.Field name="tipo">
+            {(campo) => (
+              <YStack gap={10}>
+                <Text color="$texto" fontSize={16} lineHeight={22} fontWeight="600">
+                  ¿Qué pasó?
+                </Text>
+                <XStack flexWrap="wrap" gap={8} role="radiogroup" aria-label="Qué pasó">
+                  {TIPOS_DE_EMERGENCIA.map((opcion) => (
+                    <Opcion
+                      key={opcion.id}
+                      // "…" avisa que esa opción pide escribir algo más.
+                      texto={opcion.id === TIPO_OTRO ? `${opcion.texto}…` : opcion.texto}
+                      etiqueta={opcion.texto}
+                      elegida={campo.state.value === opcion.id}
+                      onPress={() => campo.handleChange(opcion.id)}
+                    />
+                  ))}
+                </XStack>
+                {campo.state.value === TIPO_OTRO ? (
+                  <form.Field name="otro">
+                    {(campoOtro) => (
+                      <Input
+                        value={campoOtro.state.value}
+                        onChangeText={campoOtro.handleChange}
+                        onBlur={campoOtro.handleBlur}
+                        placeholder="Cuéntalo en pocas palabras"
+                        placeholderTextColor="$textoTenue"
+                        maxLength={LARGO_MAXIMO_OTRO}
+                        height={48}
+                        rounded={12}
+                        fontSize={15}
+                        bg="$fondo"
+                        borderColor="$borde"
+                        returnKeyType="done"
+                        aria-label="Qué pasó, en pocas palabras"
+                      />
+                    )}
+                  </form.Field>
+                ) : null}
+              </YStack>
+            )}
+          </form.Field>
+        )}
 
         <form.Field name="afectados">
           {(campo) => (

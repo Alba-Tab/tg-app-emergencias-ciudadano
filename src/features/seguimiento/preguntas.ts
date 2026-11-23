@@ -43,15 +43,17 @@ export type Respuestas = {
   /** Texto de "Otro". Solo cuenta si el tipo elegido es `OTRO`. */
   otro: string
   afectados: number | null
+  /** Código del tipo de suceso del protocolo de la central, cuando la central publicó uno. Reemplaza a `tipo`. */
+  tipoSuceso: string | null
 }
 
-export const SIN_RESPUESTAS: Respuestas = { paraQuien: null, tipo: null, otro: '', afectados: null }
+export const SIN_RESPUESTAS: Respuestas = { paraQuien: null, tipo: null, otro: '', afectados: null, tipoSuceso: null }
 
 /**
  * Pedido de `POST /alertas/{alertaId}/detalles` con lo contestado. La descripción une para quién y el tipo con " · ",
  * en ese orden, y no se envía si no se eligió ninguno de los dos.
  */
-export function detallesDeRespuestas({ paraQuien, tipo, otro, afectados }: Respuestas): DetallesAlerta {
+export function detallesDeRespuestas({ paraQuien, tipo, otro, afectados, tipoSuceso }: Respuestas): DetallesAlerta {
   const partes: string[] = []
   if (paraQuien) {
     partes.push(textoDe(PARA_QUIEN, paraQuien))
@@ -69,11 +71,17 @@ export function detallesDeRespuestas({ paraQuien, tipo, otro, afectados }: Respu
   if (partes.length > 0) {
     detalles.descripcion = partes.join(' · ')
   }
+  // El tipo del protocolo viaja como código, en su propio campo: con él la central decide qué preguntar y qué mandar.
+  if (tipoSuceso) {
+    detalles.tipoSuceso = tipoSuceso
+  }
   return detalles
 }
 
 export function hayRespuestas(detalles: DetallesAlerta) {
-  return detalles.cantidadAfectados !== undefined || detalles.descripcion !== undefined
+  return (
+    detalles.cantidadAfectados !== undefined || detalles.descripcion !== undefined || detalles.tipoSuceso !== undefined
+  )
 }
 
 function textoDe(opciones: readonly { id: string; texto: string }[], id: string) {

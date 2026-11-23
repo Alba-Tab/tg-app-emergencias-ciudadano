@@ -5,6 +5,7 @@ import { ScrollView } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Button, XStack, YStack, useToastController } from 'tamagui'
 
+import { FormularioDelSuceso } from '@/features/formulario/FormularioDelSuceso'
 import type { MotivoRetiro } from '@/features/alerta/api'
 import { retirarPedidoMutation } from '@/features/alerta/queries'
 import type { Coordenadas } from '@/features/alerta/ubicacion'
@@ -172,6 +173,7 @@ export function PantallaSeguimiento() {
               )}
               {/* Las preguntas conservan su sitio en el árbol: al aparecer unidades no se pierde lo contestado. */}
               {puedePreguntar ? <PreguntasIncidente alertaId={alertaId} /> : null}
+              {puedePreguntar ? <FormularioDelSuceso alertaId={alertaId} /> : null}
               {puedeMostrar ? <PasoEvidencias alertaId={alertaId} /> : null}
 
               {/* Retirar el pedido no corta el viaje de nadie: si hay unidad en camino, ella decide. */}

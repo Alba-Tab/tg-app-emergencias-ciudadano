@@ -7,6 +7,7 @@ import { abrirSeguimiento, volverAlInicio } from '@/features/seguimiento/navegac
 import { seguimientoEnCursoQuery } from '@/features/seguimiento/queries'
 import { trasladosKeys } from '@/features/traslados/queries'
 import { queryClient } from '@/shared/query/queryClient'
+import { formularioKeys } from '@/features/formulario/queries'
 
 import { permisoYaPreguntado, recordarPermisoPreguntado } from './almacen'
 import { notificacionesApi } from './api'
@@ -211,8 +212,20 @@ function actualizarPorTraslado(datos: Record<string, unknown> | undefined) {
   return trasladoId
 }
 
+/**
+ * La central necesita que se conteste una pregunta del formulario: se vuelven a pedir las preguntas de esa alerta,
+ * para que la urgente aparezca primero sin esperar al próximo pedido.
+ */
+function actualizarPorPregunta(datos: Record<string, unknown> | undefined) {
+  const alertaId = idDe(datos?.alertaId)
+  if (datos?.tipo === 'PREGUNTA_PENDIENTE' && alertaId !== null) {
+    void queryClient.invalidateQueries({ queryKey: formularioKeys.preguntas(Number(alertaId)) })
+  }
+}
+
 /** Aviso que llega con la app abierta. Lo muestra el sistema; acá se refresca lo que cambió. */
 export function recibirAviso(notificacion: Notification) {
+  actualizarPorPregunta(notificacion.request.content.data)
   actualizarPorTraslado(notificacion.request.content.data)
 }
 
@@ -230,6 +243,7 @@ export function abrirAviso(respuesta: NotificationResponse, rutaActual: string) 
   }
   respuestasAtendidas.add(identificador)
   const datos = respuesta.notification.request.content.data
+  actualizarPorPregunta(datos)
   const trasladoId = actualizarPorTraslado(datos)
   if (trasladoId !== null) {
     // Con su detalle ya a la vista basta el refresco.
